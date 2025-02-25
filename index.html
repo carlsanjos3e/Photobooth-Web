@@ -3,10 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Photobooth</title>
+    <title>Responsive Photobooth</title>
     <style>
         body { text-align: center; font-family: Arial, sans-serif; }
-        video, canvas { border: 2px solid black; margin-top: 10px; display: block; margin-left: auto; margin-right: auto; }
+        video, canvas { 
+            width: 100%; 
+            max-width: 400px; 
+            height: auto; 
+            border: 2px solid black; 
+            margin-top: 10px; 
+            display: block; 
+            margin-left: auto; 
+            margin-right: auto; 
+        }
         button { margin: 10px; padding: 10px; font-size: 16px; }
         #countdown { font-size: 24px; font-weight: bold; color: red; margin-top: 10px; }
         #flash { 
@@ -20,20 +29,19 @@
             pointer-events: none;
             transition: opacity 0.3s;
         }
-        #video, #canvas { margin-top: 20px; }
     </style>
 </head>
 <body>
-    <h1>Simple Photobooth</h1>
+    <h1>Responsive Photobooth</h1>
     <button onclick="startCamera()">Start Camera</button>
     <button onclick="startPhotoSequence()">Start 4-Shot Sequence</button>
     <button onclick="downloadAllPhotos()">Download Individual Photos</button>
     <button onclick="downloadCollage()">Download Collage</button>
     <br>
     <div id="countdown"></div>
-    <video id="video" width="400" height="300" autoplay></video>
-    <canvas id="canvas" width="400" height="300" style="display:none;"></canvas>
-    <canvas id="collageCanvas" width="400" height="1200"></canvas>
+    <video id="video" autoplay></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <canvas id="collageCanvas"></canvas>
     <div id="flash"></div>
     <script>
         let video = document.getElementById('video');
@@ -43,24 +51,38 @@
         let collageCtx = collageCanvas.getContext('2d');
         let countdown = document.getElementById('countdown');
         let flash = document.getElementById('flash');
-        let shotCount = 0; // Track number of shots
-        let capturedPhotos = []; // Store captured images
+        let shotCount = 0;
+        let capturedPhotos = [];
 
         function startCamera() {
             navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => { video.srcObject = stream; })
+                .then(stream => { 
+                    video.srcObject = stream; 
+                    video.onloadedmetadata = () => {
+                        adjustCanvasSize();
+                    };
+                })
                 .catch(err => { alert('Error accessing camera: ' + err); });
         }
 
+        function adjustCanvasSize() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            collageCanvas.width = video.videoWidth;
+            collageCanvas.height = video.videoHeight * 4;
+        }
+
+        window.addEventListener('resize', adjustCanvasSize);
+
         function startPhotoSequence() {
-            shotCount = 0; // Reset counter before starting
-            capturedPhotos = []; // Clear previous photos
-            collageCtx.clearRect(0, 0, collageCanvas.width, collageCanvas.height); // Reset collage
+            shotCount = 0;
+            capturedPhotos = [];
+            collageCtx.clearRect(0, 0, collageCanvas.width, collageCanvas.height);
             takePhotoWithDelay();
         }
 
         function takePhotoWithDelay() {
-            if (shotCount < 4) { // Ensure only 4 shots are taken
+            if (shotCount < 4) {
                 let timeLeft = 5;
                 countdown.innerText = timeLeft;
                 let countdownInterval = setInterval(() => {
@@ -71,12 +93,10 @@
                         countdown.innerText = '';
                         capturePhoto();
                         shotCount++;
-                        
-                        // Show live video again before the next shot
                         if (shotCount < 4) {
                             video.style.display = 'block';
                             canvas.style.display = 'none';
-                            takePhotoWithDelay(); // Recursive call for next shot
+                            takePhotoWithDelay();
                         }
                     }
                 }, 1000);
@@ -84,22 +104,21 @@
         }
 
         function capturePhoto() {
-            flash.style.opacity = '1'; // Show flash effect
-            setTimeout(() => { flash.style.opacity = '0'; }, 200); // Hide flash quickly
-            
+            flash.style.opacity = '1';
+            setTimeout(() => { flash.style.opacity = '0'; }, 200);
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             canvas.style.display = 'block';
             video.style.display = 'none';
             let photoData = canvas.toDataURL('image/png');
-            capturedPhotos.push(photoData); // Save photo
-            updateCollage(photoData, shotCount); // Update collage preview
+            capturedPhotos.push(photoData);
+            updateCollage(photoData, shotCount);
         }
 
         function updateCollage(photo, index) {
             let img = new Image();
             img.src = photo;
             img.onload = () => {
-                collageCtx.drawImage(img, 0, index * 300, 400, 300); // Positioning each photo in the collage
+                collageCtx.drawImage(img, 0, index * canvas.height, canvas.width, canvas.height);
             };
         }
 
@@ -125,3 +144,4 @@
     </script>
 </body>
 </html>
+

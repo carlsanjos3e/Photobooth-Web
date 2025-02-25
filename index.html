@@ -16,6 +16,9 @@
             margin-left: auto; 
             margin-right: auto; 
         }
+        video {
+            transform: scaleX(-1); /* Flip video feed horizontally */
+        }
         button { margin: 10px; padding: 10px; font-size: 16px; }
         #countdown { font-size: 24px; font-weight: bold; color: red; margin-top: 10px; }
         #flash { 
@@ -106,7 +109,11 @@
         function capturePhoto() {
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 200);
+            ctx.save();
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1); // Flip image horizontally
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
             canvas.style.display = 'block';
             video.style.display = 'none';
             let photoData = canvas.toDataURL('image/png');

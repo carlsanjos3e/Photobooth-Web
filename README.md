@@ -3,3 +3,4 @@ photos, so I tried making my own. Right now, I've only focused on the functional
 much on how it should look like. It may not be much but I'm proud of my work. 
 
 The web app/site can be accessed here: 
+https://carlsanjos3e.github.io/Photobooth-Web/
